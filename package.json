@@ -1,0 +1,25 @@
+{
+  "name": "condorchat",
+  "version": "1.0.0",
+  "description": "Chat web for technical test to CondorLabs",
+  "main": "index.js",
+  "scripts": {
+    "serve": "node index.js"
+  },
+  "keywords": [
+    "chat",
+    "condorlabs",
+    "websocket",
+    "chat",
+    "rooms",
+    "express"
+  ],
+  "author": "Kmario19",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^3.0.6",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.6.7"
+  }
+}
