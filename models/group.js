@@ -5,6 +5,17 @@ let groupShema = congoose.Schema({
         type: String,
         required: true
     },
+    messages: [{
+        body: {
+            type: String,
+            required: true
+        },
+        user:  { 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'User',
+            required: true
+        }
+    }],
     created: { 
         type: Date,
         default: Date.now

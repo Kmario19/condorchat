@@ -10,10 +10,6 @@ let messageShema = mongoose.Schema({
         ref: 'User',
         required: true
     },
-    group: {
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Group' 
-    },
     to_user: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User' 
