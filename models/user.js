@@ -18,12 +18,14 @@ let userShema = mongoose.Schema({
         required: true
     },
     avatar: Buffer,
-    registered: { 
+    registered: {
         type: Date,
         default: Date.now
     }
 })
 
+userShema.virtual('fullName').get(() => this.first_name + ' ' + this.last_name);
+
 let User = mongoose.model('User', userShema)
- 
+
 module.exports = User
