@@ -1,0 +1,24 @@
+const Group = require('../models/group')
+
+const validateGroup = (req, res, next) => {
+    const name = req.body.name
+
+    // Verify if is empty
+    if (!name || !name.trim().length)
+        return res.status(422).json({ error: 'The field is required', field: 'name' })
+
+    const id = req.params.id
+
+    // Check if exist with same name (regex for case sensitive)
+    Group.findOne({ name: new RegExp(name, 'i'), _id: { $ne: id } }, '_id', (err, obj) => {
+        if (err) return res.status(400).json(err)
+
+        if (obj) return res.status(422).json({ error: 'Group already exists' })
+
+        req.group = { name, user: req.user._id }
+
+        next()
+    })
+}
+
+module.exports = validateGroup

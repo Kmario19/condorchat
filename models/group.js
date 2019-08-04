@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-let groupShema = congoose.Schema({
+let groupShema = mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -16,6 +16,11 @@ let groupShema = congoose.Schema({
             required: true
         }
     }],
+    user:  { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User',
+        required: true
+    },
     created: { 
         type: Date,
         default: Date.now

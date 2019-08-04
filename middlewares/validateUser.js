@@ -14,7 +14,7 @@ const validateUser = (req, res, next) => {
             return res.status(422).json({ error: 'The field is required', field: key })
     })
 
-    // Check if exist with same username (regex to case sensitive)
+    // Check if exist with same username (regex for case sensitive)
     User.findOne({ username: new RegExp(userData.username, 'i') }, '_id', (err, obj) => {
         if (err) return res.status(400).json(err)
 

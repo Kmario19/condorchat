@@ -19,7 +19,6 @@ users.get('/:username', requireAuth, (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' })
 
         return res.json(user)
-
     })
 })
 
