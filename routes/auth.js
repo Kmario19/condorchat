@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const global = require('../global')
 
+const validateUser = require('../middlewares/validateUser')
+
 const registerToken = (id) => jwt.sign({ userId: id }, global.TOKEN_KEY, { expiresIn: '24h' })
 
 auth.post('/login', (req, res) => {
@@ -20,29 +22,15 @@ auth.post('/login', (req, res) => {
     })
 })
 
-auth.post('/register', (req, res) => {
-    let userData = {
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
-        username: req.body.username,
-        password: req.body.password
-    }
+auth.post('/register', validateUser, (req, res) => {
+    req.user.password = bcrypt.hashSync(req.user.password, 10)
 
-    User.findOne({ username: userData.username }, '_id', (err, obj) => {
+    let user = new User(req.user)
+
+    user.save((err, user) => {
         if (err) return res.status(400).json(err)
 
-        if (obj) return res.json({ error: 'User already exists' })
-
-        userData.password = bcrypt.hashSync(userData.password, 10)
-
-        let user = new User(userData)
-
-        user.save((err, user) => {
-            if (err) return res.status(400).json(err)
-
-            return res.json({ message: 'User created', token: registerToken(user._id) })
-        })
-
+        return res.json({ message: 'User created', token: registerToken(user._id) })
     })
 })
 
