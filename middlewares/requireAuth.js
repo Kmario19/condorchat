@@ -5,7 +5,7 @@ const verifyToken = require('./verifyToken')
 const verifyUser = require('./verifyUser')
 
 app.use(verifyToken, verifyUser, (req, res, next) => {
-    if (!req.user)
+    if (!req.auth)
         return res.status(401).json({ error: 'Unauthorized' })
 
     next()

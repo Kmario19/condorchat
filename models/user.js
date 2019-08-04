@@ -17,7 +17,7 @@ let userShema = mongoose.Schema({
         type: String,
         required: true
     },
-    avatar: Buffer,
+    avatar: { data: Buffer, mimeType: String },
     registered: {
         type: Date,
         default: Date.now

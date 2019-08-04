@@ -14,11 +14,17 @@ const validateUser = (req, res, next) => {
             return res.status(422).json({ error: 'The field is required', field: key })
     })
 
+    // If exist id in the request, exclude this group
+    const id = req.params.id
+
+    if (id && !req.auth._id.equals(id))
+        return res.status(403).json({ error: 'You can\'t access' })
+
     // Check if exist with same username (regex for case sensitive)
-    User.findOne({ username: new RegExp(userData.username, 'i') }, '_id', (err, obj) => {
+    User.findOne({ username: new RegExp(userData.username, 'i'), _id: { $ne: id } }, '_id', (err, obj) => {
         if (err) return res.status(400).json(err)
 
-        if (obj) return res.status(422).json({ error: 'User already exists' })
+        if (obj) return res.status(422).json({ error: 'Username already exists', field: 'username' })
 
         req.user = userData
 

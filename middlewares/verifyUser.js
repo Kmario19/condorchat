@@ -7,7 +7,7 @@ const verifyUser = (req, res, next) => {
     jwt.verify(req.token, global.TOKEN_KEY, (err, payload) => {
         if (payload) {
             User.findById(payload.userId, '-password', (err, user) => {
-                req.user = user
+                req.auth = user
                 next()
             })
         } else {

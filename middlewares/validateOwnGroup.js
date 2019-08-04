@@ -8,7 +8,7 @@ const validateOwnGroup = (req, res, next) => {
 
         if (!group) return res.status(404).json({ error: 'Group not exist' })
 
-        if (!group.user.equals(req.user._id))
+        if (!group.user.equals(req.auth._id))
             return res.status(403).json({ error: 'You can\'t access to this group' })
 
         next()

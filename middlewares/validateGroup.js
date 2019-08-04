@@ -7,6 +7,7 @@ const validateGroup = (req, res, next) => {
     if (!name || !name.trim().length)
         return res.status(422).json({ error: 'The field is required', field: 'name' })
 
+    // If exist id in the request, exclude this group
     const id = req.params.id
 
     // Check if exist with same name (regex for case sensitive)
