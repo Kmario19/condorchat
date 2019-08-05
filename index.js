@@ -11,11 +11,18 @@ const groups = require('./routes/groups')
 mongoose.connect('mongodb://localhost/condorchat', { useNewUrlParser: true })
 mongoose.set('useFindAndModify', false); // For can use findByIdAndUpdate
 
+const server = app.listen(port, () => {
+    console.log('API server is running on port: ' + port)
+})
+
+const io = require('socket.io')(server)
+const Chat = require('./lib/chat')(io)
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/', (req, res) => {
-    res.send('Ready')
+    res.sendFile(__dirname + '/client/index.html');
 })
 
 app.use(auth)
@@ -26,8 +33,4 @@ app.use('/groups', groups)
 
 app.use(function (req, res, next) {
     res.status(404).json({ error: 'Not found' })
-});
-
-app.listen(port, () => {
-    console.log('Server is running on port: ' + port)
 })

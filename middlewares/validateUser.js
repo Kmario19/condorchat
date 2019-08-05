@@ -16,7 +16,8 @@ const validateUser = (req, res, next) => {
 
     // If exist id in the request, exclude this group
     const id = req.params.id
-
+    
+    // Then, check if am i
     if (id && !req.auth._id.equals(id))
         return res.status(403).json({ error: 'You can\'t access' })
 
