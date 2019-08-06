@@ -9,10 +9,17 @@ const validateUser = (req, res, next) => {
     }
 
     // Verify if is empty - All required
-    Object.keys(userData).forEach((key) => {
-        if (!userData[key] || !userData[key].trim().length)
-            return res.status(422).json({ error: 'The field is required', field: key })
-    })
+    let error_field = null
+    for (let key of Object.keys(userData)) {
+        if (!userData[key] || !userData[key].trim().length) {
+            error_field = key
+            break
+        }
+    }
+
+    if (error_field) {
+        return res.status(422).json({ error: 'The field is required', field: error_field })
+    }
 
     // If exist id in the request, exclude this group
     const id = req.params.id
