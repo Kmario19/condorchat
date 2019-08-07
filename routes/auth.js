@@ -18,6 +18,7 @@ auth.post('/login', (req, res) => {
                 message: 'Logged in successfully',
                 token: registerToken(user._id),
                 user: {
+                    _id: user._id,
                     first_name: user.first_name,
                     last_name: user.last_name,
                     username: user.username,
@@ -41,6 +42,7 @@ auth.post('/register', validateUser, (req, res) => {
         return res.json({
             message: 'User created',
             token: registerToken(user._id), user: {
+                _id: user._id,
                 first_name: user.first_name,
                 last_name: user.last_name,
                 username: user.username,

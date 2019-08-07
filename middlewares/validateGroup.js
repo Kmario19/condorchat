@@ -16,7 +16,7 @@ const validateGroup = (req, res, next) => {
 
         if (obj) return res.status(422).json({ error: 'Group already exists' })
 
-        req.group = { name, user: req.user._id }
+        req.group = { name, user: req.auth._id }
 
         next()
     })

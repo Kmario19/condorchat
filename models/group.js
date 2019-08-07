@@ -14,7 +14,8 @@ let groupShema = mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'User',
             required: true
-        }
+        },
+        timestamp: Date
     }],
     user:  { 
         type: mongoose.Schema.Types.ObjectId, 
