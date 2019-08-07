@@ -50,19 +50,18 @@ export default {
           password: this.password
         })
         .then(res => {
-          console.log(res)
           localStorage.setItem('userToken', res.data.token)
           localStorage.setItem('userData', JSON.stringify(res.data.user))
-          router.push({ name: 'Profile' })
+          router.push({ name: 'Home' })
           this.emitMethod()
         })
         .catch(err => {
           localStorage.removeItem('userToken')
+          localStorage.removeItem('userData')
           console.log(err)
         })
     },
     emitMethod () {
-      console.log('enviando')
       EventBus.$emit('logged-in', 'loggedin')
     }
   }

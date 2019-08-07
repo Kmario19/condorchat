@@ -62,12 +62,13 @@ export default {
       ).then((res) => {
         localStorage.setItem('userToken', res.token)
         localStorage.setItem('userData', JSON.stringify(res.user))
-        router.push({ name: 'Profile' })
+        router.push({ name: 'Home' })
         this.emitMethod()
         console.log(res)
       }).catch(err => {
         console.log(err)
         localStorage.removeItem('userToken')
+        localStorage.removeItem('userData')
         if (err.response && err.response.status === 422) {
           this.error_message = err.response.data.error
           this.error_field = err.response.data.field
@@ -75,7 +76,6 @@ export default {
       })
     },
     emitMethod () {
-      console.log('enviando')
       EventBus.$emit('logged-in', 'loggedin')
     }
   },

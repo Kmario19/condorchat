@@ -36,20 +36,23 @@ let router = new Router({
     {
       path: '/profile',
       name: 'Profile',
-      component: Profile
+      component: Profile,
+      meta: {
+        requiresAuth: true
+      }
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (localStorage.getItem('userToken') != null) {
+    if (localStorage.getItem('userToken') != null && localStorage.getItem('userData') != null) {
       next()
     } else {
       next({ name: 'Login' })
     }
   } else if (to.matched.some(record => record.meta.guest)) {
-    if (localStorage.getItem('userToken') == null) {
+    if (localStorage.getItem('userToken') == null || localStorage.getItem('userData') == null) {
       next()
     } else {
       next({ name: 'Home' })
