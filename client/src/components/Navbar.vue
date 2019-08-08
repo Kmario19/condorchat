@@ -3,7 +3,10 @@
     <button class="navbar-toggler d-block d-sm-none" type="button" v-on:click="toggleSidebar">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <router-link class="navbar-brand col-sm-3 col-md-2 mr-0 d-none d-sm-block" to="/">CondorChat</router-link>
+    <router-link class="navbar-brand col-sm-3 col-md-2 mr-0 d-none d-sm-block mr-1" to="/">
+      <img src="/avatar/default.jpg" width="20" height="20" class="rounded">
+      <strong>CondorChat</strong>
+    </router-link>
     <ul class="navbar-nav px-3 d-none d-sm-block">
         <li v-if="auth=='loggedin' || token!=null || token!=undefined" class="nav-item">
           <a class="nav-link" href="#" v-on:click="logout">Logout</a>

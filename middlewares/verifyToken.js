@@ -1,3 +1,6 @@
+/**
+ * The Token JWT must be present
+ */
 const verifyToken = (req, res, next) => {
     const header = req.headers.authorization
 

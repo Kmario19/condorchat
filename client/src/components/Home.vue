@@ -6,7 +6,7 @@
           <div class="my_user text-center mt-3" data-toggle="collapse" data-target="#userControls" aria-expanded="false" aria-controls="userControls">
             <img :src="imageUrl(auth.avatar)" width="80" height="80" class="avatar rounded">
             <h4 class="mb-0">{{ auth.first_name }} {{ auth.last_name }}</h4>
-            <span class="text-muted">@{{ auth.username }}</span>
+            <span class="text-muted">{{ auth.username }}</span>
           </div>
           <div class="collapse" id="userControls">
             <ul class="nav flex-column text-center" >
@@ -74,10 +74,10 @@
       <main role="main" class="col-md-10">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center p-3 border-bottom">
           <h3 class="m-0">{{ header_title }}</h3>
-          <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-toolbar mb-2 mb-md-0" v-if="group_active || user_active">
             <input type="text" class="input-search" placeholder="Find messages" v-if="form.messages.show" v-model="form.messages.search">
             <div class="btn-group mr-2">
-              <button type="button" class="btn btn-sm btn-outline-secondary" v-on:click="form.messages.show = !form.messages.show">SEARCH</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" v-if="group_active || user_active" v-on:click="form.messages.show = !form.messages.show, form.messages.search = ''"><icon icon="magnifier" size="small" no-svg/></button>
               <button type="button" class="btn btn-sm btn-outline-info" v-if="group_active && group_active.user == auth._id" v-on:click="editGroup">EDIT</button>
               <button type="button" class="btn btn-sm btn-outline-danger" v-if="group_active && group_active.user == auth._id" v-on:click="deleteGroup">DELETE</button>
             </div>
@@ -88,7 +88,7 @@
             <icon icon="reload" size="large" class="spin" no-svg/>
           </div>
           <div class="msg_history scroll_history">
-            <div class="alert alert-info m-3" v-if="!user_active && !group_active">Select an user or chat room to start conversation</div>
+            <div class="alert alert-info m-3" v-if="!user_active && !group_active">Select an user or chat room to start conversation<br>Created by Carlos Ramos with ♥ to CondorLabs</div>
             <div class="msg_item" v-for="message in filteredMessages" v-bind:key="message._id">
               <div class="msg_avatar">
                 <img :src="imageUrl(message.user.avatar)" width="36" height="36" class="avatar">
@@ -97,12 +97,12 @@
               <div class="msg_content">
                 <span class="msg_user">{{ message.user.username }}</span>
                 <span class="msg_time">{{ message.timestamp | moment("h:mm A") }}</span>
-                <div class="msg_body">{{ message.body }}</div>
+                <div class="msg_body" v-html="media(message.body)"></div>
               </div>
             </div>
           </div>
           <div class="msg_form" v-if="user_active || group_active">
-            <input type="text" class="form-control" placeholder="Write something..." v-model="message" v-on:keyup.enter="sendMessage">
+            <textarea type="text" class="textarea-message" placeholder="Write something..." v-model="message" v-on:keyup.enter="sendMessage"></textarea>
           </div>
         </div>
       </main>
@@ -143,7 +143,7 @@
                     <label for="last_name" class="form-control-label">Last Name</label>
                     <input type="text" name="last_name" id="last_name" class="form-control"
                     v-bind:class="{ 'is-invalid': form.profile.error_field == 'last_name' }" v-model="auth.last_name">
-                    <div class="invalid-feedback" v-if="form.profile.error_field == 'first_name'">{{ form.profile.error_message }}</div>
+                    <div class="invalid-feedback" v-if="form.profile.error_field == 'last_name'">{{ form.profile.error_message }}</div>
                   </div>
                 </div>
                 <div class="col-sm-6">
@@ -151,7 +151,7 @@
                     <label for="username" class="form-control-label">Username</label>
                     <input type="text" name="username" id="username" class="form-control"
                     v-bind:class="{ 'is-invalid': form.profile.error_field == 'username' }" v-model="auth.username">
-                    <div class="invalid-feedback" v-if="form.profile.error_field == 'first_name'">{{ form.profile.error_message }}</div>
+                    <div class="invalid-feedback" v-if="form.profile.error_field == 'username'">{{ form.profile.error_message }}</div>
                   </div>
                 </div>
                 <div class="col-sm-6">
@@ -248,6 +248,7 @@ export default {
     })
 
     this.socket.on('connect', () => {
+      // Verify if is new user
       if (this.auth.new_user) {
         delete this.auth.new_user
         localStorage.setItem('userData', JSON.stringify(this.auth))
@@ -260,7 +261,7 @@ export default {
       for (let i = 0; i < this.users.length; i++) {
         this.users[i].online = usersConnected.includes(this.users[i]._id)
       }
-      this.$forceUpdate()
+      this.$forceUpdate() // Is neccesary to correctly render
     })
 
     this.socket.on('login', (user) => {
@@ -274,7 +275,6 @@ export default {
     })
 
     this.socket.on('logout', (user) => {
-      console.log('User disconected', user)
       for (let i = 0; i < this.users.length; i++) {
         if (this.users[i]._id === user) {
           this.users[i].online = false
@@ -301,7 +301,7 @@ export default {
           this.users[i].first_name = user.first_name
           this.users[i].last_name = user.last_name
           this.users[i].username = user.username
-          this.users[i].avatar = user.avatar + '?' + (new Date()).getTime()
+          this.users[i].avatar = user.avatar + '?' + (new Date()).getTime() // For refresh dom image
           break
         }
       }
@@ -320,9 +320,11 @@ export default {
       this.$forceUpdate()
     })
 
+    // MP's
     this.socket.on('direct', (data) => {
       for (let i = 0; i < this.users.length; i++) {
         if (this.users[i]._id === data.user._id) {
+          // Is not active, mark as new
           if (this.user_active !== this.users[i]) {
             this.users[i].new_messages = true
           }
@@ -339,7 +341,7 @@ export default {
     this.socket.on('update group', (group) => {
       for (let i = 0; i < this.groups.length; i++) {
         if (this.groups[i]._id === group._id) {
-          this.users[i].name = group.name
+          this.groups[i].name = group.name
           break
         }
       }
@@ -360,19 +362,31 @@ export default {
     })
   },
   methods: {
+    /**
+     * Update chat container height
+     */
     updateChatHeight () {
       let docHeight = document.documentElement.clientHeight
       // Client height - header - title - formchat
-      this.chatHeight = docHeight - (48 + 66 + 58)
+      this.chatHeight = docHeight - (48 + 66 + 69)
     },
+    /**
+     * After each new message, scroll to chat bottom
+     */
     scrollChatBottom () {
       let container = document.querySelector('.scroll_history')
       container.scrollTop = container.scrollHeight
     },
+    /**
+     * Simple function to hide sidebar when windows is mobile
+     */
     hideSidebar () {
       this.open_sidebar_mobile = false
       EventBus.$emit('toggle-sidebar', this.open_sidebar_mobile)
     },
+    /**
+     * Open chat user and suscribe
+     */
     joinChatUser (user) {
       this.user_active = user
       this.group_active = null
@@ -404,6 +418,9 @@ export default {
           })
       }
     },
+    /**
+     * Open group chat
+     */
     joinChatGroup (group) {
       this.group_active = group
       this.user_active = null
@@ -412,6 +429,9 @@ export default {
       this.group_active.new_messages = false
       this.hideSidebar()
     },
+    /**
+     * Create new group or chat room
+     */
     submitNewGroup () {
       axios
         .post('/api/groups', {name: this.form.group.name}, {
@@ -435,12 +455,19 @@ export default {
           }
         })
     },
+    /**
+     * If response status is 401 (unauthorized), force session close for
+     * security reasons
+     */
     forceLogout () {
       localStorage.removeItem('userToken')
       localStorage.removeItem('userData')
-      this.socket.close()
+      this.socket.close() // Can't be open
       router.push({ name: 'Login' })
     },
+    /**
+     * Create new message
+     */
     sendMessage () {
       this.message = this.message.trim()
       if (this.message.length) {
@@ -457,6 +484,9 @@ export default {
       }
       this.message = ''
     },
+    /**
+     * Send new message to active group
+     */
     sendToGroup (newMessage) {
       this.group_active.messages.push(newMessage)
       this.socket.emit('message', { message: newMessage, room: this.group_active.name })
@@ -475,6 +505,9 @@ export default {
           }
         })
     },
+    /**
+     * Send new message to active user
+     */
     sendToUser (newMessage) {
       this.user_active.messages.push(newMessage)
       axios
@@ -484,8 +517,8 @@ export default {
           }
         })
         .then(res => {
-          res.data.message.to_user = { _id: this.user_active._id, username: this.user_active.username }
-          res.data.message.user = { _id: this.auth._id, username: this.auth.username }
+          res.data.message.to_user = { _id: this.user_active._id, username: this.user_active.username, avatar: this.user_active.avatar }
+          res.data.message.user = { _id: this.auth._id, username: this.auth.username, avatar: this.auth.avatar }
           this.socket.emit('direct', res.data.message)
         })
         .catch(err => {
@@ -494,12 +527,18 @@ export default {
           }
         })
     },
+    /**
+     * Get ref file to upload
+     */
     handleFileUpload () {
       this.form.profile.avatar = this.$refs.avatar.files[0]
     },
+    /**
+     * Save profile changes
+     */
     submitFormProfile () {
       let formData = new FormData()
-      if (this.form.profile.avatar) {
+      if (this.form.profile.avatar) { // Only if was changed
         formData.append('avatar', this.form.profile.avatar)
       }
       formData.append('first_name', this.auth.first_name)
@@ -517,7 +556,9 @@ export default {
           this.socket.emit('update user', res.data)
           this.form.profile.show_modal = false
           localStorage.setItem('userData', JSON.stringify(this.auth))
-          this.auth.avatar += '?' + (new Date()).getTime()
+          if (this.form.profile.avatar) {
+            this.auth.avatar += '?' + (new Date()).getTime()
+          }
         })
         .catch(err => {
           if (err.response && err.response.status === 422) {
@@ -528,9 +569,16 @@ export default {
           }
         })
     },
+    /**
+     * Load avatar if available
+     */
     imageUrl (avatar) {
       return avatar ? '/avatar/' + avatar : '/avatar/default.jpg'
     },
+    /**
+     * Update group name
+     * For time, it was used prompt D:
+     */
     editGroup () {
       let name = prompt('Edit group name', this.group_active.name) || ''
       if (name.trim().length) {
@@ -552,6 +600,10 @@ export default {
           })
       }
     },
+    /**
+     * Delete group
+     * For time, it was used confirm D:
+     */
     deleteGroup () {
       if (confirm('Are you sure to delete this group and its conversation?')) {
         axios
@@ -577,6 +629,12 @@ export default {
             }
           })
       }
+    },
+    /**
+     * URL to IMG html into message body
+     */
+    media (val) {
+      return val.replace(/https?:\/\/.*\.(?:png|jpg|gif)/i, '<img src="$&"/>')
     }
   },
   computed: {
@@ -593,11 +651,16 @@ export default {
       })
     }
   },
+  /**
+   * IMPORTANT
+   * To avoid duplicate socket connections
+   */
   beforeDestroy () {
     this.socket.close()
   },
   watch: {
     messages () {
+      // Is neccesary after render component
       this.$nextTick(this.scrollChatBottom)
     }
   }
@@ -642,11 +705,15 @@ export default {
   color: #1d1c1d;
   word-wrap: break-word;
 }
-.msg_form {
-  padding: 10px 0
+.msg_content .msg_body img {
+  max-height: 200px;
 }
-.msg_form .form-control {
-  resize: none
+.msg_form .textarea-message {
+  resize: none;
+  width: 100%;
+  border: 0;
+  border-top: solid 1px #ccc;
+  padding: 10px;
 }
 .nav-link {
   padding: 0.3rem 1rem;
@@ -726,5 +793,8 @@ i.sli-font.small {
   border: solid 1px #ccc;
   outline: none;
   margin-right: 5px;
+}
+.textarea-message {
+  outline: none
 }
 </style>

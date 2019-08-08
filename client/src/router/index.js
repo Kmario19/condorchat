@@ -4,7 +4,6 @@ import Moment from 'vue-moment'
 import Home from '@/components/Home'
 import Login from '@/components/Login'
 import Register from '@/components/Register'
-import Profile from '@/components/Profile'
 
 Vue.use(Router)
 Vue.use(Moment)
@@ -34,18 +33,13 @@ let router = new Router({
       meta: {
         guest: true
       }
-    },
-    {
-      path: '/profile',
-      name: 'Profile',
-      component: Profile,
-      meta: {
-        requiresAuth: true
-      }
     }
   ]
 })
 
+/**
+ * Simple middleware to verify if guest or auth
+ */
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (localStorage.getItem('userToken') != null && localStorage.getItem('userData') != null) {

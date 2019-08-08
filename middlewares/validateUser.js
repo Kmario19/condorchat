@@ -1,5 +1,8 @@
 const User = require('../models/user')
 
+/**
+ * Validate user data before create and store object
+ */
 const validateUser = (req, res, next) => {
     let userData = {
         first_name: req.body.first_name,
@@ -36,7 +39,7 @@ const validateUser = (req, res, next) => {
         return res.status(403).json({ error: 'You can\'t access' })
 
     // Check if exist with same username (regex for case sensitive)
-    User.findOne({ username: new RegExp(userData.username, 'i'), _id: { $ne: id } }, '_id', (err, obj) => {
+    User.findOne({ username: new RegExp(`^${userData.username}$`, 'i'), _id: { $ne: id } }, '_id', (err, obj) => {
         if (err) return res.status(400).json(err)
 
         if (obj) return res.status(422).json({ error: 'Username already exists', field: 'username' })

@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken')
-const global = require('../global')
+const config = require('../config')
 
 const User = require('../models/user')
 
+/**
+ * Find user with token (encrypted id)
+ */
 const verifyUser = (req, res, next) => {
-    jwt.verify(req.token, global.TOKEN_KEY, (err, payload) => {
+    jwt.verify(req.token, config.TOKEN_KEY, (err, payload) => {
         if (payload) {
             User.findById(payload.userId, '-password', (err, user) => {
                 req.auth = user

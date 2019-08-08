@@ -1,5 +1,8 @@
 const Group = require('../models/group')
 
+/**
+ * Middleware to verify the auth user, must be the group creator
+ */
 const validateOwnGroup = (req, res, next) => {
     const id = req.params.id
 

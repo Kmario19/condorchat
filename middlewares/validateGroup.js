@@ -1,5 +1,8 @@
 const Group = require('../models/group')
 
+/**
+ * Validate group data before create and store object
+ */
 const validateGroup = (req, res, next) => {
     const name = req.body.name
 

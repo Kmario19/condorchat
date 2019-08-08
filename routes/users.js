@@ -8,7 +8,11 @@ const validateAvatar = require('../middlewares/validateAvatar')
 
 const User = require('../models/user')
 
-users.use(fileUpload({ // For upload avatar
+/**
+ * For upload avatar
+ * Blob isn't recommended, better upload to server
+ */
+users.use(fileUpload({
     useTempFiles: true,
     tempFileDir: '/tmp/'
 }))

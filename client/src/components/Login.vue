@@ -4,7 +4,7 @@
       <div class="col-md-6 mx-auto login-container">
         <form v-on:submit.prevent="login">
           <div class="text-center mb-4">
-            <img src="@/assets/logo.png" width="100" height="100">
+            <img src="/avatar/default.jpg" width="100" height="100" class="rounded">
           </div>
           <h1 class="h3 mb-3 font-weight-normal text-center text-uppercase">LOGIN</h1>
           <div class="form-group">

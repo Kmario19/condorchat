@@ -1,3 +1,8 @@
+
+/**
+ * Validate message data before create and store object
+ * The user id or group id must be present
+ */
 const validateMessage = (req, res, next) => {
     const body = req.body.body
 

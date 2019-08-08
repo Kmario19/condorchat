@@ -1,3 +1,7 @@
+/**
+ * Verify if file type is accepted
+ * Verify if file size is lower than 2MB
+ */
 const validateAvatar = (req, res, next) => {
     const allowedMimeTypes = ['image/gif', 'image/jpeg', 'image/pjpeg', 'image/x-png', 'image/png', 'image/svg+xml']
 

@@ -3,14 +3,22 @@ const auth = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
-const global = require('../global')
+const config = require('../config')
 
 const validateUser = require('../middlewares/validateUser')
 
-const registerToken = (id) => jwt.sign({ userId: id }, global.TOKEN_KEY, { expiresIn: '24h' })
+/**
+ * Crypt id only
+ * @param {String} id 
+ */
+const registerToken = (id) => jwt.sign({ userId: id }, config.TOKEN_KEY, { expiresIn: '24h' })
 
+/**
+ * Login user
+ * Find by regex to sensitive case
+ */
 auth.post('/login', (req, res) => {
-    User.findOne({ username: req.body.username }, (err, user) => {
+    User.findOne({ username: new RegExp(`^${req.body.username}$`, 'i') }, (err, user) => {
         if (err) return res.status(400).json(err)
 
         if (user && req.body.password && bcrypt.compareSync(req.body.password, user.password)) {
@@ -33,6 +41,9 @@ auth.post('/login', (req, res) => {
     })
 })
 
+/**
+ * Register new user
+ */
 auth.post('/register', validateUser, (req, res) => {
     req.user.password = bcrypt.hashSync(req.user.password, 10)
 
