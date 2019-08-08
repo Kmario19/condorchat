@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid">
     <div class="row">
-      <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+      <nav class="col-md-2 d-none d-md-block bg-light sidebar" v-bind:class="{ 'mobile-open': open_sidebar_mobile }">
         <div class="sidebar-sticky">
           <div class="my_user text-center mt-3" data-toggle="collapse" data-target="#userControls" aria-expanded="false" aria-controls="userControls">
             <img :src="imageUrl(auth.avatar)" width="80" height="80" class="avatar rounded">
@@ -74,10 +74,12 @@
       <main role="main" class="col-md-10">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center p-3 border-bottom">
           <h3 class="m-0">{{ header_title }}</h3>
-          <div class="btn-toolbar mb-2 mb-md-0" v-if="group_active && group_active.user == auth._id">
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <input type="text" class="input-search" placeholder="Find messages" v-if="form.messages.show" v-model="form.messages.search">
             <div class="btn-group mr-2">
-              <button type="button" class="btn btn-sm btn-outline-info">EDIT</button>
-              <button type="button" class="btn btn-sm btn-outline-danger">DELETE</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" v-on:click="form.messages.show = !form.messages.show">SEARCH</button>
+              <button type="button" class="btn btn-sm btn-outline-info" v-if="group_active && group_active.user == auth._id" v-on:click="editGroup">EDIT</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" v-if="group_active && group_active.user == auth._id" v-on:click="deleteGroup">DELETE</button>
             </div>
           </div>
         </div>
@@ -87,7 +89,7 @@
           </div>
           <div class="msg_history scroll_history">
             <div class="alert alert-info m-3" v-if="!user_active && !group_active">Select an user or chat room to start conversation</div>
-            <div class="msg_item" v-for="message in messages" v-bind:key="message._id">
+            <div class="msg_item" v-for="message in filteredMessages" v-bind:key="message._id">
               <div class="msg_avatar">
                 <img :src="imageUrl(message.user.avatar)" width="36" height="36" class="avatar">
                 <span></span>
@@ -195,6 +197,7 @@ export default {
       group_active: null,
       user_active: null,
       header_title: 'Welcome to CondorChat',
+      open_sidebar_mobile: false,
       form: {
         group: {
           new: false,
@@ -212,6 +215,7 @@ export default {
           error_message: ''
         },
         messages: {
+          show: false,
           search: ''
         }
       },
@@ -331,6 +335,29 @@ export default {
       }
       this.$forceUpdate()
     })
+
+    this.socket.on('update group', (group) => {
+      for (let i = 0; i < this.groups.length; i++) {
+        if (this.groups[i]._id === group._id) {
+          this.users[i].name = group.name
+          break
+        }
+      }
+      this.$forceUpdate()
+    })
+
+    this.socket.on('delete group', (id) => {
+      for (let i = 0; i < this.groups.length; i++) {
+        if (this.groups[i]._id === id) {
+          this.groups.splice(i, 1)
+          break
+        }
+      }
+    })
+
+    EventBus.$on('toggle-sidebar', (status) => {
+      this.open_sidebar_mobile = status
+    })
   },
   methods: {
     updateChatHeight () {
@@ -342,11 +369,16 @@ export default {
       let container = document.querySelector('.scroll_history')
       container.scrollTop = container.scrollHeight
     },
+    hideSidebar () {
+      this.open_sidebar_mobile = false
+      EventBus.$emit('toggle-sidebar', this.open_sidebar_mobile)
+    },
     joinChatUser (user) {
       this.user_active = user
       this.group_active = null
       this.header_title = user.first_name + ' ' + user.last_name
       this.user_active.new_messages = false
+      this.hideSidebar()
       if (user.messages_ready) {
         this.messages = user.messages
       } else {
@@ -378,6 +410,7 @@ export default {
       this.header_title = '#' + group.name
       this.messages = group.messages
       this.group_active.new_messages = false
+      this.hideSidebar()
     },
     submitNewGroup () {
       axios
@@ -497,6 +530,53 @@ export default {
     },
     imageUrl (avatar) {
       return avatar ? '/avatar/' + avatar : '/avatar/default.jpg'
+    },
+    editGroup () {
+      let name = prompt('Edit group name', this.group_active.name) || ''
+      if (name.trim().length) {
+        axios
+          .post('/api/groups/' + this.group_active._id, { name }, {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          })
+          .then(res => {
+            this.socket.emit('update group', {_id: this.group_active._id, name})
+            this.group_active.name = name
+            this.header_title = '#' + name
+          })
+          .catch(err => {
+            if (err.response && err.response.status === 401) {
+              this.forceLogout()
+            }
+          })
+      }
+    },
+    deleteGroup () {
+      if (confirm('Are you sure to delete this group and its conversation?')) {
+        axios
+          .delete('/api/groups/' + this.group_active._id, {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          })
+          .then(res => {
+            this.socket.emit('delete group', this.group_active._id)
+            for (let i = 0; i < this.groups.length; i++) {
+              if (this.groups[i] === this.group_active) {
+                this.groups.splice(i, 1)
+                break
+              }
+            }
+            this.group_active = null
+            this.header_title = 'Welcome to CondorChat, again'
+          })
+          .catch(err => {
+            if (err.response && err.response.status === 401) {
+              this.forceLogout()
+            }
+          })
+      }
     }
   },
   computed: {
@@ -639,5 +719,12 @@ i.sli-font.small {
 .modal-wrapper {
   display: table-cell;
   vertical-align: middle;
+}
+.input-search {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: solid 1px #ccc;
+  outline: none;
+  margin-right: 5px;
 }
 </style>

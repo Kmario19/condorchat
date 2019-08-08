@@ -99,6 +99,12 @@ body {
   border-color: transparent;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
 }
+@media (max-width: 576px) {
+  .mobile-open {
+    display: block!important;
+    position: fixed
+  }
+}
 
 @-webkit-keyframes spin /* Safari and Chrome */ {
     to {

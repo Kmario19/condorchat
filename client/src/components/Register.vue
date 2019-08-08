@@ -29,6 +29,8 @@
             <div class="invalid-feedback" v-if="error_field == 'password'">{{ error_message }}</div>
           </div>
           <button type="submit" class="btn btn-lg btn-primary btn-block">Register!</button>
+          <p class="my-3 text-center">Or do you have an account?</p>
+          <router-link type="submit" class="btn btn-lg btn-secondary btn-block" to="/login">Login</router-link>
         </form>
       </div>
     </div>
