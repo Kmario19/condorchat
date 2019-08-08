@@ -1,9 +1,9 @@
 <template>
   <div class="container">
     <div class="row">
-      <div class="col-md-6 mt-5 mx-auto">
+      <div class="col-md-6 mx-auto register-container">
         <form v-on:submit.prevent="register">
-          <h1 class="h3 mb-3 font-weight-normal">Register</h1>
+          <h1 class="h3 mb-3 font-weight-normal text-center text-uppercase">Register</h1>
           <div class="form-group">
             <label for="name">First name</label>
             <input type="text" v-model="first_name" class="form-control"
@@ -60,11 +60,12 @@ export default {
           password: this.password
         }
       ).then((res) => {
-        localStorage.setItem('userToken', res.token)
-        localStorage.setItem('userData', JSON.stringify(res.user))
+        localStorage.setItem('userToken', res.data.token)
+        // For send event: new user
+        res.data.user.new_user = true
+        localStorage.setItem('userData', JSON.stringify(res.data.user))
         router.push({ name: 'Home' })
         this.emitMethod()
-        console.log(res)
       }).catch(err => {
         console.log(err)
         localStorage.removeItem('userToken')
@@ -97,3 +98,9 @@ export default {
   }
 }
 </script>
+
+<style>
+.register-container {
+  margin-top: 7em
+}
+</style>

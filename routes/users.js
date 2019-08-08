@@ -8,7 +8,10 @@ const validateAvatar = require('../middlewares/validateAvatar')
 
 const User = require('../models/user')
 
-users.use(fileUpload()) // For upload avatar
+users.use(fileUpload({ // For upload avatar
+    useTempFiles: true,
+    tempFileDir: '/tmp/'
+}))
 
 /**
  * List of users
@@ -38,22 +41,32 @@ users.get('/:username', requireAuth, (req, res) => {
  * Update user
  */
 users.post('/:id', requireAuth, validateUser, validateAvatar, (req, res) => {
-    // Buffer avatar image
+    // Upload avatar image with user id
     if (req.files && Object.keys(req.files).length && req.files.avatar) {
-        req.user.avatar = {
-            data: req.files.avatar.data,
-            mimeType: req.files.avatar.mimetype
-        }
+        let filename_parts = req.files.avatar.name.split('.')
+        req.user.avatar = req.params.id + '.' + filename_parts[filename_parts.length - 1]
+        req.files.avatar.mv(__dirname + '/../upload/avatar/' + req.user.avatar, (err) => {
+            if (err) console.log(err)
+        })
     }
 
-    req.user.password = bcrypt.hashSync(req.user.password, 10)
+    if (req.user.password) {
+        req.user.password = bcrypt.hashSync(req.user.password, 10)
+    }
 
     User.findByIdAndUpdate(req.params.id, req.user, { new: true }, (err, user) => {
         if (err) return res.status(400).json(err)
 
-        if (!user) return res.status(404).json({ error: 'User updated', user })
+        if (!user) return res.status(404).json({ error: 'User not found' })
 
-        return res.json(user)
+        return res.json({
+            _id: user._id,
+            avatar: user.avatar,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            registered: user.registered
+        })
     })
 })
 

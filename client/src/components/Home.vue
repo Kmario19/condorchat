@@ -4,15 +4,16 @@
       <nav class="col-md-2 d-none d-md-block bg-light sidebar">
         <div class="sidebar-sticky">
           <div class="my_user text-center mt-3" data-toggle="collapse" data-target="#userControls" aria-expanded="false" aria-controls="userControls">
-            <img src="@/assets/logo.png" width="50" height="50" class="avatar rounded">
-            <h4>Carlos Ramos</h4>
+            <img :src="imageUrl(auth.avatar)" width="80" height="80" class="avatar rounded">
+            <h4 class="mb-0">{{ auth.first_name }} {{ auth.last_name }}</h4>
+            <span class="text-muted">@{{ auth.username }}</span>
           </div>
           <div class="collapse" id="userControls">
             <ul class="nav flex-column text-center" >
               <li class="nav-item">
-                <router-link class="nav-link" to="/profile">
+                <a class="nav-link" href="#" v-on:click="form.profile.show_modal = true">
                   <icon icon="user" size="small" no-svg/> Profile
-                </router-link>
+                </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#" v-on:click="forceLogout">
@@ -34,10 +35,11 @@
           <div class="text-center my-5" v-if="loading">
             <icon icon="reload" size="large" class="spin" no-svg/>
           </div>
-          <ul class="nav flex-column mb-2" v-if="groups.length">
+          <ul class="nav flex-column mb-2 group-list" v-if="groups.length">
             <li class="nav-item" v-for="group in groups" v-bind:key="group._id">
               <a class="nav-link" v-bind:class="{ active: group_active == group }" href="#" v-on:click="joinChatGroup(group)">
                 <strong># </strong>{{ group.name }}
+                <span class="new_messages" v-if="group.new_messages"></span>
               </a>
             </li>
           </ul>
@@ -57,12 +59,13 @@
             <li class="nav-item" v-for="user in filteredUsers" v-bind:key="user._id" v-bind:class="{ active: user_active == user }">
               <a class="nav-link user_item" href="#" v-on:click="joinChatUser(user)">
                 <div class="user_avatar" v-bind:class="{online: user.online}">
-                  <img src="@/assets/logo.png" width="36" height="36" class="avatar">
+                  <img :src="imageUrl(user.avatar)" width="36" height="36" class="avatar">
                 </div>
                 <div class="user_data">
                   <div class="user_name">{{ user.first_name }} {{ user.last_name }}</div>
                   <span class="user_alias">{{ user.username }}</span>
                 </div>
+                <span class="new_messages" v-if="user.new_messages"></span>
               </a>
             </li>
           </ul>
@@ -82,16 +85,16 @@
           <div class="text-center my-5" v-if="loading_messages">
             <icon icon="reload" size="large" class="spin" no-svg/>
           </div>
-          <div class="msg_history">
+          <div class="msg_history scroll_history">
             <div class="alert alert-info m-3" v-if="!user_active && !group_active">Select an user or chat room to start conversation</div>
             <div class="msg_item" v-for="message in messages" v-bind:key="message._id">
               <div class="msg_avatar">
-                <img src="@/assets/logo.png" width="36" height="36" class="avatar">
+                <img :src="imageUrl(message.user.avatar)" width="36" height="36" class="avatar">
                 <span></span>
               </div>
               <div class="msg_content">
                 <span class="msg_user">{{ message.user.username }}</span>
-                <span class="msg_time">{{ message.timestamp }}</span>
+                <span class="msg_time">{{ message.timestamp | moment("h:mm A") }}</span>
                 <div class="msg_body">{{ message.body }}</div>
               </div>
             </div>
@@ -101,6 +104,69 @@
           </div>
         </div>
       </main>
+    </div>
+    <div class="modal-mask" v-if="form.profile.show_modal">
+      <div class="modal-wrapper">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="profileModalLabel">Profile</h5>
+              <button type="button" class="close" v-on:click="form.profile.show_modal = false">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-sm-12 text-center">
+                  <img :src="imageUrl(auth.avatar)" width="100" height="100" class="avatar">
+                  <div class="form-group">
+                    <label>
+                      <input type="file" ref="avatar" name="avatar" id="avatar" class="form-control-file" v-on:change="handleFileUpload()">
+                    </label>
+                    <div class="text-danger" v-if="form.profile.error_field == 'avatar'">{{ form.profile.error_message }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="first_name" class="form-control-label">First Name</label>
+                    <input type="text" name="first_name" id="first_name" class="form-control"
+                    v-bind:class="{ 'is-invalid': form.profile.error_field == 'first_name' }" v-model="auth.first_name">
+                    <div class="invalid-feedback" v-if="form.profile.error_field == 'first_name'">{{ form.profile.error_message }}</div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="last_name" class="form-control-label">Last Name</label>
+                    <input type="text" name="last_name" id="last_name" class="form-control"
+                    v-bind:class="{ 'is-invalid': form.profile.error_field == 'last_name' }" v-model="auth.last_name">
+                    <div class="invalid-feedback" v-if="form.profile.error_field == 'first_name'">{{ form.profile.error_message }}</div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label for="username" class="form-control-label">Username</label>
+                    <input type="text" name="username" id="username" class="form-control"
+                    v-bind:class="{ 'is-invalid': form.profile.error_field == 'username' }" v-model="auth.username">
+                    <div class="invalid-feedback" v-if="form.profile.error_field == 'first_name'">{{ form.profile.error_message }}</div>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-group">
+                    <label class="form-control-label">Registered</label>
+                    <input type="text" class="form-control" v-bind:value="auth.registered | moment('Y-MM-DD H:m:s')" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary pull-left" v-on:click="form.profile.show_modal = false">Close</button>
+              <button type="button" class="btn btn-primary" v-on:click="submitFormProfile()">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -138,6 +204,15 @@ export default {
         user: {
           find: false,
           search: ''
+        },
+        profile: {
+          show_modal: false,
+          avatar: null,
+          error_field: '',
+          error_message: ''
+        },
+        messages: {
+          search: ''
         }
       },
       message: ''
@@ -155,9 +230,9 @@ export default {
         this.groups = res.data.groups
         this.loading = false
         EventBus.$emit('logged-in', 'loggedin')
+        this.socket.emit('login', this.auth)
       })
       .catch(err => {
-        console.log(err)
         if (err.response && err.response.status === 401) {
           this.forceLogout()
         }
@@ -169,14 +244,19 @@ export default {
     })
 
     this.socket.on('connect', () => {
-      console.log('conected socket')
-      this.socket.emit('login', this.auth)
+      if (this.auth.new_user) {
+        delete this.auth.new_user
+        localStorage.setItem('userData', JSON.stringify(this.auth))
+        this.socket.emit('new user', this.auth)
+      }
     })
 
     this.socket.on('users_connected', (usersConnected) => {
+      usersConnected = usersConnected.map(uc => uc.user)
       for (let i = 0; i < this.users.length; i++) {
         this.users[i].online = usersConnected.includes(this.users[i]._id)
       }
+      this.$forceUpdate()
     })
 
     this.socket.on('login', (user) => {
@@ -186,32 +266,70 @@ export default {
           break
         }
       }
+      this.$forceUpdate()
     })
 
     this.socket.on('logout', (user) => {
+      console.log('User disconected', user)
+      for (let i = 0; i < this.users.length; i++) {
+        if (this.users[i]._id === user) {
+          this.users[i].online = false
+          break
+        }
+      }
+      this.$forceUpdate()
+    })
+
+    this.socket.on('new group', (group) => {
+      this.groups.push(group)
+    })
+
+    this.socket.on('new user', (user) => {
+      user.online = true
+      this.users.push(user)
+    })
+
+    this.socket.on('update user', (user) => {
+      console.log(user)
       for (let i = 0; i < this.users.length; i++) {
         if (this.users[i]._id === user._id) {
-          this.users[i].online = true
+          console.log('Encontrado')
+          this.users[i].first_name = user.first_name
+          this.users[i].last_name = user.last_name
+          this.users[i].username = user.username
+          this.users[i].avatar = user.avatar + '?' + (new Date()).getTime()
           break
         }
       }
     })
 
-    this.socket.on('new group', (group) => {
-      this.groups.push(group)
-      this.socket.emit('suscribe', group)
-    })
-
-    this.socket.on('new user', (user) => {
-      this.users.push(user)
-    })
-
     this.socket.on('message', (data) => {
-      console.log(data)
+      for (let i = 0; i < this.groups.length; i++) {
+        if (this.groups[i].name === data.room) {
+          if (this.groups[i] !== this.group_active) {
+            this.groups[i].new_messages = true
+          }
+          this.groups[i].messages.push(data.message)
+          break
+        }
+      }
+      this.$forceUpdate()
     })
 
     this.socket.on('direct', (data) => {
-      console.log(data)
+      for (let i = 0; i < this.users.length; i++) {
+        if (this.users[i]._id === data.user._id) {
+          if (this.user_active !== this.users[i]) {
+            this.users[i].new_messages = true
+          }
+          if (!this.users[i].messages) {
+            this.users[i].messages = []
+          }
+          this.users[i].messages.push(data)
+          break
+        }
+      }
+      this.$forceUpdate()
     })
   },
   methods: {
@@ -220,16 +338,20 @@ export default {
       // Client height - header - title - formchat
       this.chatHeight = docHeight - (48 + 66 + 58)
     },
+    scrollChatBottom () {
+      let container = document.querySelector('.scroll_history')
+      container.scrollTop = container.scrollHeight
+    },
     joinChatUser (user) {
       this.user_active = user
       this.group_active = null
       this.header_title = user.first_name + ' ' + user.last_name
+      this.user_active.new_messages = false
       if (user.messages_ready) {
         this.messages = user.messages
       } else {
         this.messages = []
         this.loading_messages = true
-        console.log(user._id)
         axios
           .get('/api/chat/direct/' + user._id, {
             headers: {
@@ -240,11 +362,11 @@ export default {
             this.messages = user.messages = res.data.messages
             user.messages_ready = true
             this.loading_messages = false
+            this.socket.emit('suscribe user', user)
           })
           .catch(err => {
-            console.log(err)
             if (err.response && err.response.status === 401) {
-              // this.forceLogout()
+              this.forceLogout()
             }
             this.loading_messages = false
           })
@@ -255,6 +377,7 @@ export default {
       this.user_active = null
       this.header_title = '#' + group.name
       this.messages = group.messages
+      this.group_active.new_messages = false
     },
     submitNewGroup () {
       axios
@@ -272,7 +395,6 @@ export default {
           this.socket.emit('new group', res.data.group)
         })
         .catch(err => {
-          console.log(err)
           if (err.response && err.response.status === 422) {
             this.form.group.error = err.response.data.error
           } else if (err.response && err.response.status === 401) {
@@ -304,11 +426,7 @@ export default {
     },
     sendToGroup (newMessage) {
       this.group_active.messages.push(newMessage)
-      this.socket.emit('message', {
-        message: this.message,
-        user: this.auth,
-        room: this.group_active.name
-      })
+      this.socket.emit('message', { message: newMessage, room: this.group_active.name })
       axios
         .post('/api/chat/group', {group_id: this.group_active._id, body: this.message}, {
           headers: {
@@ -319,7 +437,6 @@ export default {
           // Ok :)
         })
         .catch(err => {
-          console.log(err)
           if (err.response && err.response.status === 401) {
             this.forceLogout()
           }
@@ -327,11 +444,6 @@ export default {
     },
     sendToUser (newMessage) {
       this.user_active.messages.push(newMessage)
-      this.socket.emit('direct', {
-        message: this.message,
-        user: this.auth,
-        to_user: this.user_active
-      })
       axios
         .post('/api/chat/direct', {user_id: this.user_active._id, body: this.message}, {
           headers: {
@@ -339,14 +451,52 @@ export default {
           }
         })
         .then(res => {
-          // Ok :)
+          res.data.message.to_user = { _id: this.user_active._id, username: this.user_active.username }
+          res.data.message.user = { _id: this.auth._id, username: this.auth.username }
+          this.socket.emit('direct', res.data.message)
         })
         .catch(err => {
-          console.log(err)
           if (err.response && err.response.status === 401) {
             this.forceLogout()
           }
         })
+    },
+    handleFileUpload () {
+      this.form.profile.avatar = this.$refs.avatar.files[0]
+    },
+    submitFormProfile () {
+      let formData = new FormData()
+      if (this.form.profile.avatar) {
+        formData.append('avatar', this.form.profile.avatar)
+      }
+      formData.append('first_name', this.auth.first_name)
+      formData.append('last_name', this.auth.last_name)
+      formData.append('username', this.auth.username)
+      axios
+        .post('/api/users/' + this.auth._id, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${this.token}`
+          }
+        })
+        .then(res => {
+          this.auth.avatar = res.data.avatar
+          this.socket.emit('update user', res.data)
+          this.form.profile.show_modal = false
+          localStorage.setItem('userData', JSON.stringify(this.auth))
+          this.auth.avatar += '?' + (new Date()).getTime()
+        })
+        .catch(err => {
+          if (err.response && err.response.status === 422) {
+            this.form.profile.error_message = err.response.data.error
+            this.form.profile.error_field = err.response.data.field
+          } else if (err.response && err.response.status === 401) {
+            this.forceLogout()
+          }
+        })
+    },
+    imageUrl (avatar) {
+      return avatar ? '/avatar/' + avatar : '/avatar/default.jpg'
     }
   },
   computed: {
@@ -355,6 +505,20 @@ export default {
         return `${user.first_name} ${user.last_name} ${user.username}`.toLowerCase()
           .includes(this.form.user.search.toLowerCase().trim())
       })
+    },
+    filteredMessages () {
+      return this.messages.filter(message => {
+        return message.body.toLowerCase()
+          .includes(this.form.messages.search.toLowerCase().trim())
+      })
+    }
+  },
+  beforeDestroy () {
+    this.socket.close()
+  },
+  watch: {
+    messages () {
+      this.$nextTick(this.scrollChatBottom)
     }
   }
 }
@@ -448,5 +612,32 @@ i.sli-font.small {
 }
 .my_user {
   cursor: pointer
+}
+.new_messages {
+  position: absolute;
+  background: #8bc34a;
+  padding: 5px;
+  top: 10px;
+  right: 18px;
+  border-radius: 100%;
+  border: solid 1px #1d1c1d;
+}
+.group-list .nav-link {
+  position: relative
+}
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, .5);
+  display: table;
+  transition: opacity .3s ease;
+}
+.modal-wrapper {
+  display: table-cell;
+  vertical-align: middle;
 }
 </style>

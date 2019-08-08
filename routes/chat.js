@@ -42,7 +42,7 @@ chat.get('/group/:group_id', requireAuth, async (req, res) => {
  * Save groupal message
  */
 chat.post('/group', requireAuth, validateMessage, async (req, res) => {
-    Group.updateOne({ _id: req.body.group_id }, { $push: { messages: message } }, (err, result) => {
+    Group.updateOne({ _id: req.body.group_id }, { $push: { messages: req.message } }, { new: true }, (err, result) => {
         if (err) return res.status(400).json(err)
 
         return res.json({ message: 'Message sent', result })
@@ -60,7 +60,7 @@ chat.post('/direct', requireAuth, validateMessage, async (req, res) => {
     message.save((err, message) => {
         if (err) return res.status(400).json(err)
 
-        return res.json({ message: 'Group created' })
+        return res.json({ message })
     })
 })
 

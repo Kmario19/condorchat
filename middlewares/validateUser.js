@@ -8,6 +8,9 @@ const validateUser = (req, res, next) => {
         password: req.body.password
     }
 
+    // If exist id in the request, exclude this user
+    const id = req.params.id
+
     // Verify if is empty - All required
     let error_field = null
     for (let key of Object.keys(userData)) {
@@ -17,12 +20,16 @@ const validateUser = (req, res, next) => {
         }
     }
 
+    // If is update, the password field is not required
+    if (error_field == 'password' && id) {
+        error_field = null
+        if (!userData.password)
+            delete userData.password
+    }
+
     if (error_field) {
         return res.status(422).json({ error: 'The field is required', field: error_field })
     }
-
-    // If exist id in the request, exclude this group
-    const id = req.params.id
     
     // Then, check if am i
     if (id && !req.auth._id.equals(id))

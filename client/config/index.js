@@ -14,6 +14,10 @@ module.exports = {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true
+      },
+      '/avatar': {
+        target: 'http://localhost:5000/upload',
+        changeOrigin: true
       }
     },
 

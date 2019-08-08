@@ -19,6 +19,7 @@ auth.post('/login', (req, res) => {
                 token: registerToken(user._id),
                 user: {
                     _id: user._id,
+                    avatar: user.avatar,
                     first_name: user.first_name,
                     last_name: user.last_name,
                     username: user.username,
@@ -28,7 +29,7 @@ auth.post('/login', (req, res) => {
             })
         }
 
-        return res.status(404).json({ error: 'Username or password incorrect' })
+        return res.status(422).json({ error: 'Username or password incorrect' })
     })
 })
 
@@ -43,6 +44,7 @@ auth.post('/register', validateUser, (req, res) => {
             message: 'User created',
             token: registerToken(user._id), user: {
                 _id: user._id,
+                avatar: user.avatar,
                 first_name: user.first_name,
                 last_name: user.last_name,
                 username: user.username,

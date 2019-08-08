@@ -22,6 +22,8 @@ const Chat = require('./lib/chat')(io)
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
+app.use('/upload', express.static('upload'));
+
 app.use('/api', auth)
 
 app.use('/api/chat', chat)
