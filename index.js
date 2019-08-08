@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
-const config = require('../config')
+const config = require('./config')
 const port = process.env.PORT || config.PORT
 
 const auth = require('./routes/auth')

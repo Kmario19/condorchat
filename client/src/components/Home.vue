@@ -43,6 +43,7 @@
               </a>
             </li>
           </ul>
+          <div class="alert alert-warning text-center" v-if="!groups.length">Nothing here</div>
           <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-2 text-muted">
             <span>Direct Messages</span>
             <a class="d-flex align-items-center text-muted" v-on:click="form.user.find = !form.user.find, form.user.search = ''">
@@ -69,6 +70,7 @@
               </a>
             </li>
           </ul>
+          <div class="alert alert-warning text-center" v-if="!users.length">Only you, invite friends ;)</div>
         </div>
       </nav>
       <main role="main" class="col-md-10">
@@ -622,6 +624,7 @@ export default {
             }
             this.group_active = null
             this.header_title = 'Welcome to CondorChat, again'
+            this.messages = []
           })
           .catch(err => {
             if (err.response && err.response.status === 401) {
