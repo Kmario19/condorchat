@@ -23,6 +23,6 @@
     "express-fileupload": "^1.1.9",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.7.5",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.4.0"
   }
 }
